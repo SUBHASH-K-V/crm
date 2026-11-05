@@ -51,11 +51,13 @@ namespace AcxiomCRM.Services
 
         public async Task<Dictionary<string, decimal>> GetPipelineReportAsync()
         {
-            return await _context.Opportunities
+            var openOpps = await _context.Opportunities
                 .Where(o => o.Status == "Open")
+                .ToListAsync();
+
+            return openOpps
                 .GroupBy(o => o.Stage)
-                .Select(g => new { Stage = g.Key, Total = g.Sum(o => o.Amount) })
-                .ToDictionaryAsync(x => x.Stage, x => x.Total);
+                .ToDictionary(g => g.Key, g => g.Sum(o => o.Amount));
         }
 
         public async Task<IEnumerable<AuditLog>> GetAuditReportAsync(string? userId = null, string? action = null, string? module = null, DateTime? fromDate = null, DateTime? toDate = null)
@@ -70,4 +72,3 @@ namespace AcxiomCRM.Services
         }
     }
 }
-
