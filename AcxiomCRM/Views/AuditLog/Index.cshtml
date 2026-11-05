@@ -1,0 +1,128 @@
+@model IEnumerable<AcxiomCRM.Models.AuditLog>
+@{
+    ViewData["Title"] = "Security & Activity Audit Logs";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">System Audit Trail</h2>
+        <p class="text-muted small mb-0">Append-oriented compliance log of all security events, logins, and CRM modifications</p>
+    </div>
+    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2">
+        <i class="bi bi-shield-lock-fill me-1"></i> Admin Access Only
+    </span>
+</div>
+
+<!-- Filter Form -->
+<div class="card shadow-sm border-0 mb-4 bg-white">
+    <div class="card-body p-3">
+        <form method="get" asp-action="Index" class="row g-2 align-items-center">
+            <div class="col-md-2">
+                <select name="userId" class="form-select">
+                    <option value="">-- All Users --</option>
+                    @foreach (var u in (List<SelectListItem>)ViewBag.Users)
+                    {
+                        <option value="@u.Value" selected="@(ViewBag.SelectedUserId == u.Value ? "selected" : null)">@u.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" name="action" value="@ViewBag.SelectedAction" class="form-control" placeholder="Action (e.g. Login, Create)" />
+            </div>
+            <div class="col-md-2">
+                <input type="text" name="module" value="@ViewBag.SelectedModule" class="form-control" placeholder="Module (e.g. Customer)" />
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control" title="From Date" />
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control" title="To Date" />
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-search me-1"></i> Filter</button>
+                <a asp-action="Index" class="btn btn-outline-secondary" title="Clear Filters"><i class="bi bi-x-circle"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Audit Log Table -->
+<div class="card shadow-sm border-0 bg-white">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 font-monospace small">
+                <thead>
+                    <tr class="font-sans-serif">
+                        <th class="ps-3">Timestamp (UTC)</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Module</th>
+                        <th>Record ID</th>
+                        <th>Old Value</th>
+                        <th>New Value</th>
+                        <th class="text-end pe-3">IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var log in Model)
+                        {
+                            <tr>
+                                <td class="ps-3 text-nowrap">@log.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>@(log.User?.FullName ?? (log.UserId != null ? log.UserId : "Anonymous/System"))</td>
+                                <td>
+                                    @switch (log.Action)
+                                    {
+                                        case "LoginSuccess":
+                                            <span class="badge bg-success-subtle text-success">LoginSuccess</span>
+                                            break;
+                                        case "LoginFailed":
+                                            <span class="badge bg-danger-subtle text-danger">LoginFailed</span>
+                                            break;
+                                        case "AccountLockedOut":
+                                            <span class="badge bg-danger">LockedOut</span>
+                                            break;
+                                        case "Logout":
+                                            <span class="badge bg-secondary-subtle text-secondary">Logout</span>
+                                            break;
+                                        case "Create":
+                                            <span class="badge bg-primary-subtle text-primary">Create</span>
+                                            break;
+                                        case "Update":
+                                            <span class="badge bg-warning-subtle text-warning">Update</span>
+                                            break;
+                                        case "Delete":
+                                            <span class="badge bg-danger-subtle text-danger">Delete</span>
+                                            break;
+                                        case "Convert":
+                                            <span class="badge bg-info-subtle text-info">Convert</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-light text-dark border">@log.Action</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="fw-bold">@log.EntityName</td>
+                                <td>@(log.RecordId ?? "-")</td>
+                                <td><span class="text-truncate d-inline-block text-muted" style="max-width: 140px;" title="@log.OldValue">@(log.OldValue ?? "-")</span></td>
+                                <td><span class="text-truncate d-inline-block text-dark fw-semibold" style="max-width: 140px;" title="@log.NewValue">@(log.NewValue ?? "-")</span></td>
+                                <td class="text-end pe-3 text-muted">@(log.IpAddress ?? "127.0.0.1")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted font-sans-serif">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                No audit log records found matching the filter.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+

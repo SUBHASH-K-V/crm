@@ -1,0 +1,113 @@
+@model IEnumerable<AcxiomCRM.ViewModels.UserViewModel>
+@{
+    ViewData["Title"] = "User & Role Administration";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">User &amp; Role Management</h2>
+        <p class="text-muted small mb-0">Manage system users, assigned roles, account activations, and lockouts</p>
+    </div>
+    <a asp-controller="Account" asp-action="Register" class="btn btn-primary">
+        <i class="bi bi-person-plus-fill me-1"></i> Register New User
+    </a>
+</div>
+
+<div class="card shadow-sm border-0 bg-white">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Full Name</th>
+                        <th>Email / Username</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Lockout</th>
+                        <th>Created</th>
+                        <th>Last Login</th>
+                        <th class="text-end pe-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td class="ps-3 fw-semibold">@user.FullName</td>
+                            <td><code>@user.Email</code></td>
+                            <td>
+                                @switch (user.Role)
+                                {
+                                    case "Admin":
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Admin</span>
+                                        break;
+                                    case "Manager":
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Manager</span>
+                                        break;
+                                    case "SalesExecutive":
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">SalesExecutive</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-secondary-subtle text-secondary px-2 py-1">@user.Role</span>
+                                        break;
+                                }
+                            </td>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge bg-success-subtle text-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                @if (user.IsLockedOut)
+                                {
+                                    <span class="badge bg-danger">Locked Out</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Normal</span>
+                                }
+                            </td>
+                            <td><small class="text-muted">@user.CreatedDate.ToString("dd MMM yyyy")</small></td>
+                            <td>
+                                <small class="text-muted">
+                                    @(user.LastLoginDate.HasValue ? user.LastLoginDate.Value.ToString("dd MMM yyyy, hh:mm tt") : "Never")
+                                </small>
+                            </td>
+                            <td class="text-end pe-3">
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-outline-primary" title="Edit User">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="ResetPassword" asp-route-id="@user.Id" class="btn btn-outline-warning" title="Reset Password">
+                                        <i class="bi bi-key"></i>
+                                    </a>
+                                    @if (user.IsLockedOut)
+                                    {
+                                        <form asp-action="Unlock" asp-route-id="@user.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-success" title="Unlock Account">
+                                                <i class="bi bi-unlock"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                    <form asp-action="ToggleActive" asp-route-id="@user.Id" method="post" class="d-inline" onsubmit="return confirm('Toggle status for user @user.FullName?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn @(user.IsActive ? "btn-outline-secondary" : "btn-outline-success")" title="@(user.IsActive ? "Deactivate" : "Activate")">
+                                            <i class="bi @(user.IsActive ? "bi-person-slash" : "bi-person-check")"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+

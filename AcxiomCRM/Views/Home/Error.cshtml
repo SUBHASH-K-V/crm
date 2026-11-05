@@ -1,0 +1,19 @@
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <div class="card p-5 shadow-sm border-danger">
+            <i class="bi bi-exclamation-triangle text-danger display-1 mb-3"></i>
+            <h2 class="text-danger fw-bold">An Error Occurred</h2>
+            <p class="text-muted">An unexpected error occurred while processing your request. Please contact your system administrator.</p>
+            <div class="mt-4">
+                <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary">
+                    <i class="bi bi-house me-1"></i> Return to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,181 @@
+@model IEnumerable<AcxiomCRM.Models.FollowUp>
+@{
+    ViewData["Title"] = "Follow-Up Management";
+    string viewMode = ViewBag.ViewMode ?? "All";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">Follow-Up Tasks</h2>
+        <p class="text-muted small mb-0">Manage customer follow-ups, calls, reminders, and pending touchpoints</p>
+    </div>
+    <div class="d-flex gap-2">
+        <div class="btn-group">
+            <a asp-action="Index" class="btn btn-outline-secondary @(viewMode == "All" ? "active" : "")">All</a>
+            <a asp-action="Upcoming" class="btn btn-outline-primary @(viewMode == "Upcoming" ? "active" : "")">
+                <i class="bi bi-clock me-1"></i> Upcoming
+            </a>
+            <a asp-action="Overdue" class="btn btn-outline-danger @(viewMode == "Overdue" ? "active" : "")">
+                <i class="bi bi-exclamation-circle me-1"></i> Overdue
+            </a>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-calendar-plus me-1"></i> Schedule Follow-Up
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filters -->
+<div class="card shadow-sm border-0 mb-4 bg-white">
+    <div class="card-body p-3">
+        <form method="get" asp-action="Index" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input type="date" name="searchDate" value="@ViewBag.SearchDate" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <select name="searchStatus" class="form-select">
+                    <option value="">-- All Statuses --</option>
+                    @foreach (var s in (List<SelectListItem>)ViewBag.Statuses)
+                    {
+                        <option value="@s.Value" selected="@(ViewBag.SearchStatus == s.Value ? "selected" : null)">@s.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="searchAssigned" class="form-select">
+                    <option value="">-- All Reps --</option>
+                    @foreach (var u in (List<SelectListItem>)ViewBag.SalesExecutives)
+                    {
+                        <option value="@u.Value" selected="@(ViewBag.SearchAssigned == u.Value ? "selected" : null)">@u.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-1">
+                <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-search me-1"></i> Filter</button>
+                <a asp-action="Index" class="btn btn-outline-secondary" title="Clear Filters"><i class="bi bi-x-circle"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Follow-Up Table -->
+<div class="card shadow-sm border-0 bg-white">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Date</th>
+                        <th>Subject</th>
+                        <th>Type</th>
+                        <th>Related Entity</th>
+                        <th>Status</th>
+                        <th>Assigned Rep</th>
+                        <th>Remarks</th>
+                        <th class="text-end pe-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            bool isOverdue = item.Status == "Planned" && item.FollowUpDate.Date < DateTime.Today;
+                            <tr class="@(isOverdue ? "table-danger" : "")">
+                                <td class="ps-3 fw-semibold">
+                                    @if (isOverdue)
+                                    {
+                                        <span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>@item.FollowUpDate.ToString("dd MMM yyyy")</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@item.FollowUpDate.ToString("dd MMM yyyy")</span>
+                                    }
+                                </td>
+                                <td class="fw-semibold">@item.Subject</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        @switch (item.FollowUpType)
+                                        {
+                                            case "Call": <i class="bi bi-telephone text-primary me-1"></i> break;
+                                            case "Meeting": <i class="bi bi-people text-success me-1"></i> break;
+                                            case "Email": <i class="bi bi-envelope text-info me-1"></i> break;
+                                            case "Visit": <i class="bi bi-geo-alt text-warning me-1"></i> break;
+                                        }
+                                        @item.FollowUpType
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (item.Customer != null)
+                                    {
+                                        <small class="d-block text-primary"><i class="bi bi-person me-1"></i>@item.Customer.CustomerName</small>
+                                    }
+                                    @if (item.Lead != null)
+                                    {
+                                        <small class="d-block text-secondary"><i class="bi bi-funnel me-1"></i>@item.Lead.LeadName</small>
+                                    }
+                                    @if (item.Opportunity != null)
+                                    {
+                                        <small class="d-block text-success"><i class="bi bi-briefcase me-1"></i>@item.Opportunity.OpportunityName</small>
+                                    }
+                                    @if (item.Customer == null && item.Lead == null && item.Opportunity == null)
+                                    {
+                                        <span class="text-muted small">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @switch (item.Status)
+                                    {
+                                        case "Planned":
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">Planned</span>
+                                            break;
+                                        case "Completed":
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Completed</span>
+                                            break;
+                                        case "Missed":
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Missed</span>
+                                            break;
+                                        case "Cancelled":
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">Cancelled</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary px-2 py-1">@item.Status</span>
+                                            break;
+                                    }
+                                </td>
+                                <td><small class="text-muted">@(item.AssignedUser?.FullName ?? "Unassigned")</small></td>
+                                <td><small class="text-muted text-truncate d-inline-block" style="max-width: 150px;">@(item.Remarks ?? "-")</small></td>
+                                <td class="text-end pe-3">
+                                    <div class="btn-group btn-group-sm">
+                                        @if (item.Status == "Planned")
+                                        {
+                                            <form asp-action="MarkCompleted" asp-route-id="@item.FollowUpId" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-outline-success" title="Mark Completed">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        <a asp-action="Edit" asp-route-id="@item.FollowUpId" class="btn btn-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                No follow-up activities found.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+

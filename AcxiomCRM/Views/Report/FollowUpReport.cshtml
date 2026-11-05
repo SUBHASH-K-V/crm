@@ -1,0 +1,100 @@
+@model IEnumerable<AcxiomCRM.Models.FollowUp>
+@{
+    ViewData["Title"] = "Follow-Up Activity Report";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">Follow-Up &amp; Task Report</h2>
+        <p class="text-muted small mb-0">Monitor planned, completed, missed, and overdue customer engagements</p>
+    </div>
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-printer me-1"></i> Print / Export
+    </button>
+</div>
+
+<!-- Filters -->
+<div class="card shadow-sm border-0 mb-4 bg-white">
+    <div class="card-body p-3">
+        <form method="get" asp-action="FollowUpReport" class="row g-2 align-items-center">
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">-- All Statuses --</option>
+                    <option value="Planned" selected="@(ViewBag.SelectedStatus == "Planned" ? "selected" : null)">Planned</option>
+                    <option value="Completed" selected="@(ViewBag.SelectedStatus == "Completed" ? "selected" : null)">Completed</option>
+                    <option value="Missed" selected="@(ViewBag.SelectedStatus == "Missed" ? "selected" : null)">Missed</option>
+                    <option value="Cancelled" selected="@(ViewBag.SelectedStatus == "Cancelled" ? "selected" : null)">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="assignedTo" class="form-select">
+                    <option value="">-- All Reps --</option>
+                    @foreach (var u in (List<SelectListItem>)ViewBag.Users)
+                    {
+                        <option value="@u.Value" selected="@(ViewBag.SelectedAssigned == u.Value ? "selected" : null)">@u.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control" title="From Date" />
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control" title="To Date" />
+            </div>
+            <div class="col-md-3 d-flex gap-1">
+                <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-search me-1"></i> Run Report</button>
+                <a asp-action="FollowUpReport" class="btn btn-outline-secondary" title="Reset"><i class="bi bi-x-circle"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 bg-white">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Scheduled Date</th>
+                        <th>Type</th>
+                        <th>Subject</th>
+                        <th>Related Entity</th>
+                        <th>Assigned User</th>
+                        <th>Status</th>
+                        <th class="pe-3">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var f in Model)
+                        {
+                            <tr>
+                                <td class="ps-3 fw-semibold">@f.FollowUpDate.ToString("dd MMM yyyy")</td>
+                                <td><span class="badge bg-light text-dark border">@f.FollowUpType</span></td>
+                                <td class="fw-semibold">@f.Subject</td>
+                                <td>
+                                    @(f.Customer?.CustomerName ?? f.Lead?.LeadName ?? f.Opportunity?.OpportunityName ?? "-")
+                                </td>
+                                <td>@(f.AssignedUser?.FullName ?? "Unassigned")</td>
+                                <td>
+                                    <span class="badge @(f.Status == "Completed" ? "bg-success" : f.Status == "Planned" ? "bg-primary" : "bg-danger")">
+                                        @f.Status
+                                    </span>
+                                </td>
+                                <td class="pe-3 small text-muted">@(f.Remarks ?? "-")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">No follow-ups match the selected parameters.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,94 @@
+@model Dictionary<string, decimal>
+@{
+    ViewData["Title"] = "Pipeline Report";
+    decimal totalPipeline = Model?.Values.Sum() ?? 0;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">Sales Pipeline Stage Summary</h2>
+        <p class="text-muted small mb-0">Stage-wise open deal values, distribution, and total open pipeline</p>
+    </div>
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-printer me-1"></i> Print / Export
+    </button>
+</div>
+
+<!-- Total Pipeline Hero Card -->
+<div class="card shadow-sm border-0 mb-4 bg-primary text-white">
+    <div class="card-body p-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="text-white-50 text-uppercase fw-semibold mb-1">Total Active Pipeline Value</h6>
+            <h1 class="fw-bold display-5 mb-0">&#8377;@totalPipeline.ToString("N0")</h1>
+        </div>
+        <div>
+            <i class="bi bi-graph-up display-2 text-white-50"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Stage Breakdown Cards -->
+<div class="row g-3 mb-4">
+    @if (Model != null)
+    {
+        foreach (var item in Model)
+        {
+            decimal pct = totalPipeline > 0 ? (item.Value / totalPipeline) * 100 : 0;
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 bg-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0 text-secondary">@item.Key</h6>
+                            <span class="badge bg-primary-subtle text-primary">@pct.ToString("F1")%</span>
+                        </div>
+                        <h3 class="fw-bold text-dark mb-3">&#8377;@item.Value.ToString("N0")</h3>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: @pct%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<!-- Table view -->
+<div class="card shadow-sm border-0 bg-white">
+    <div class="card-header bg-white py-3 border-bottom">
+        <h5 class="fw-bold mb-0">Stage Detail Breakdown</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Pipeline Stage</th>
+                        <th>Total Value (&#8377;)</th>
+                        <th>% of Total Pipeline</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var kvp in Model)
+                        {
+                            decimal share = totalPipeline > 0 ? (kvp.Value / totalPipeline) * 100 : 0;
+                            <tr>
+                                <td class="ps-3 fw-bold text-dark">@kvp.Key</td>
+                                <td class="fw-semibold text-primary">&#8377;@kvp.Value.ToString("N0")</td>
+                                <td>@share.ToString("F2")%</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" class="text-center py-5 text-muted">No open pipeline data available.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+

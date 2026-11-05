@@ -1,0 +1,121 @@
+@model AcxiomCRM.Models.Lead
+@{
+    ViewData["Title"] = "Lead Details";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">@Model.LeadName</h2>
+        <span class="badge bg-secondary me-2">@Model.LeadCode</span>
+        @switch (Model.Status)
+        {
+            case "New":
+                <span class="badge bg-primary">New</span>
+                break;
+            case "Contacted":
+                <span class="badge bg-info text-dark">Contacted</span>
+                break;
+            case "Qualified":
+                <span class="badge bg-warning text-dark">Qualified</span>
+                break;
+            case "Converted":
+                <span class="badge bg-success">Converted</span>
+                break;
+            case "Lost":
+                <span class="badge bg-danger">Lost</span>
+                break;
+            default:
+                <span class="badge bg-secondary">@Model.Status</span>
+                break;
+        }
+    </div>
+    <div class="d-flex gap-2">
+        @if (Model.Status == "Qualified")
+        {
+            <form asp-action="Convert" asp-route-id="@Model.LeadId" method="post" class="d-inline" onsubmit="return confirm('Convert lead @Model.LeadName to a full customer account?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-success btn-sm">
+                    <i class="bi bi-arrow-right-circle me-1"></i> Convert to Customer
+                </button>
+            </form>
+        }
+        <a asp-action="Edit" asp-route-id="@Model.LeadId" class="btn btn-primary btn-sm">
+            <i class="bi bi-pencil me-1"></i> Edit Lead
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 mb-4 bg-white">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-info-circle me-2"></i>Lead Information</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Email:</span>
+                        <a href="mailto:@Model.Email" class="fw-semibold text-decoration-none">@Model.Email</a>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Phone:</span>
+                        <span class="fw-semibold">@Model.Phone</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Company:</span>
+                        <span class="fw-semibold">@(Model.CompanyName ?? "-")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Source:</span>
+                        <span class="badge bg-light text-dark border">@Model.Source</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Priority:</span>
+                        <span class="badge bg-secondary-subtle text-secondary">@Model.Priority</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Expected Value:</span>
+                        <span class="fw-bold text-success">&#8377;@Model.ExpectedValue.ToString("N0")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Assigned To:</span>
+                        <span class="fw-semibold">@(Model.AssignedUser?.FullName ?? "Unassigned")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Captured On:</span>
+                        <span>@Model.CreatedDate.ToString("dd MMM yyyy, hh:mm tt")</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 mb-4 bg-white">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-card-text me-2"></i>Notes &amp; Inquiries</h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-0">@(string.IsNullOrEmpty(Model.Notes) ? "No notes added for this lead." : Model.Notes)</p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 bg-white">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-lightning-charge me-2"></i>Lead Actions</h6>
+            </div>
+            <div class="card-body d-flex flex-wrap gap-2">
+                <a asp-controller="FollowUp" asp-action="Create" class="btn btn-outline-primary">
+                    <i class="bi bi-calendar-plus me-1"></i> Schedule Follow-Up
+                </a>
+                <a asp-controller="Activity" asp-action="Create" class="btn btn-outline-secondary">
+                    <i class="bi bi-check2-circle me-1"></i> Log Activity
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+

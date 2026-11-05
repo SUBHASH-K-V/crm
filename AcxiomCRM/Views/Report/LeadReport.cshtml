@@ -1,0 +1,98 @@
+@model IEnumerable<AcxiomCRM.Models.Lead>
+@{
+    ViewData["Title"] = "Lead Conversion Report";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">Lead Generation &amp; Conversion Report</h2>
+        <p class="text-muted small mb-0">Analyze lead sources, qualification velocity, and conversion rates</p>
+    </div>
+    <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-printer me-1"></i> Print / Export
+    </button>
+</div>
+
+<!-- Filters -->
+<div class="card shadow-sm border-0 mb-4 bg-white">
+    <div class="card-body p-3">
+        <form method="get" asp-action="LeadReport" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input type="text" name="source" value="@ViewBag.SelectedSource" class="form-control" placeholder="Source (e.g. Website, Referral)" />
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">-- All Statuses --</option>
+                    <option value="New" selected="@(ViewBag.SelectedStatus == "New" ? "selected" : null)">New</option>
+                    <option value="Contacted" selected="@(ViewBag.SelectedStatus == "Contacted" ? "selected" : null)">Contacted</option>
+                    <option value="Qualified" selected="@(ViewBag.SelectedStatus == "Qualified" ? "selected" : null)">Qualified</option>
+                    <option value="Converted" selected="@(ViewBag.SelectedStatus == "Converted" ? "selected" : null)">Converted</option>
+                    <option value="Lost" selected="@(ViewBag.SelectedStatus == "Lost" ? "selected" : null)">Lost</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="ownerId" class="form-select">
+                    <option value="">-- All Representatives --</option>
+                    @foreach (var u in (List<SelectListItem>)ViewBag.Users)
+                    {
+                        <option value="@u.Value" selected="@(ViewBag.SelectedOwner == u.Value ? "selected" : null)">@u.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-outline-primary w-100"><i class="bi bi-search me-1"></i> Filter</button>
+                <a asp-action="LeadReport" class="btn btn-outline-secondary" title="Reset"><i class="bi bi-x-circle"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 bg-white">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Code</th>
+                        <th>Lead Name</th>
+                        <th>Company</th>
+                        <th>Source</th>
+                        <th>Status</th>
+                        <th>Expected Value</th>
+                        <th>Assigned Rep</th>
+                        <th class="pe-3">Captured Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var l in Model)
+                        {
+                            <tr>
+                                <td class="ps-3 fw-bold text-secondary">@l.LeadCode</td>
+                                <td class="fw-semibold">@l.LeadName</td>
+                                <td>@(l.CompanyName ?? "-")</td>
+                                <td><span class="badge bg-light text-dark border">@l.Source</span></td>
+                                <td>
+                                    <span class="badge @(l.Status == "Converted" ? "bg-success" : l.Status == "Qualified" ? "bg-warning text-dark" : "bg-primary")">
+                                        @l.Status
+                                    </span>
+                                </td>
+                                <td class="fw-bold text-success">&#8377;@l.ExpectedValue.ToString("N0")</td>
+                                <td>@(l.AssignedUser?.FullName ?? "Unassigned")</td>
+                                <td class="pe-3">@l.CreatedDate.ToString("dd MMM yyyy")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">No leads found matching the report filter.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
